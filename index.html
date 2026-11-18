@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>27th Birthday Quest: Viral Surge - Astrocade $100K</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+  body{background:#070714;color:#fff;padding:12px;text-align:center}
+  .wrap{max-width:900px;margin:auto}
+  .top{background:linear-gradient(135deg,#ff00a8,#ffe600,#00ff88,#00ccff);color:#000;padding:16px;border-radius:18px}
+  .top h1{font-size:26px;line-height:1.1}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .stat{flex:1;min-width:110px;background:#171a3d;border:1px solid #444;border-radius:14px;padding:10px}
+  .stat b{font-size:16px;color:#ffe600;display:block}
+  button{padding:11px 14px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;margin:4px}
+  button:hover{transform:scale(1.06);box-shadow:0 0 15px #ffe600}
+  .y{background:#ffe600}.g{background:#00ff88}.r{background:#ff3b6b;color:#fff}.b{background:#00ccff}.p{background:#7a5cff;color:#fff}
+  #stage{position:relative;width:100%;height:420px;background:linear-gradient(180deg,#0a1a3a,#0c1030);border:4px solid #ff00a8;border-radius:18px;overflow:hidden;margin:10px 0}
+  .candle{position:absolute;width:36px;height:54px;font-size:28px;cursor:pointer;animation:bob 1s infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .candle.off{opacity:.3;filter:grayscale(1)}
+  #voodoo{position:absolute;left:50%;top:190px;transform:translateX(-50%);font-size:72px;cursor:pointer;transition:all .2s;z-index:10}
+  #voodoo:active{transform:translateX(-50%) scale(.8) rotate(-10deg)}
+  .fall{position:absolute;font-size:26px;z-index:5;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(450px) rotate(360deg)}}
+  .confetti{position:fixed;top:-20px;z-index:100;pointer-events:none;animation:fall2 linear forwards}
+  @keyframes fall2{to{transform:translateY(110vh) rotate(720deg)}}
+  .firework{position:fixed;z-index:90;pointer-events:none;font-size:36px;animation:boom 1s forwards}
+  @keyframes boom{0%{transform:scale(.2);opacity:1}100%{transform:scale(2.2);opacity:0}}
+  .log{background:#000;padding:10px;border-radius:10px;min-height:50px;font-size:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🎂 27TH BIRTHDAY QUEST: VIRAL SURGE 🎂<br>ASTROCADE $100K CREATOR COMPETITION</h1>
+    <p>Help Ian Patrick Batungbacal reach 1 Trillion Views before Voodoo Doll candle pops! Nov 18, 2026 - Turning 27!</p>
+    <button class="g" onclick="speak('Welcome to 27th Birthday Quest Viral Surge! Astrocade 100K! Lets go viral!')">🔊 PLAY VOICE</button>
+  </div>
+  <div class="stats">
+    <div class="stat">PHASE<b id="phaseTxt">1 - Cake Slicer</b></div>
+    <div class="stat">TIMER<b id="timerTxt">30s</b></div>
+    <div class="stat">VIEWS<b id="viewsTxt">0</b></div>
+    <div class="stat">LIKES<b id="likesTxt">0</b></div>
+    <div class="stat">SHARES<b id="sharesTxt">0</b></div>
+    <div class="stat">COMMENTS<b id="commentsTxt">0</b></div>
+    <div class="stat">SUBS<b id="subsTxt">0</b></div>
+  </div>
+  <div style="height:14px;background:#222;border-radius:10px;overflow:hidden"><div id="fill" style="height:100%;background:linear-gradient(90deg,#ff00a8,#ffe600,#00ff88);width:0%"></div></div>
+  <div style="margin:8px 0">
+    <button class="y" onclick="startGame()">▶ START QUEST</button>
+    <button class="g" onclick="nextPhase()">⏭ NEXT PHASE</button>
+    <button class="b" onclick="fireworksBurst()">🎆 FIREWORKS FRENZY</button>
+    <button class="r" onclick="resetGame()">↺ RETRY</button>
+  </div>
+  <div id="stage" onclick="stageTap(event)">
+    <div style="font-size:70px;margin-top:10px">🎂</div>
+    <p style="font-size:12px;opacity:.8">Multi-tiered Chiffon Cake - 27 Glowing Candles - Tap to blow!</p>
+    <div id="candles"></div>
+    <div id="voodoo" onclick="event.stopPropagation(); slapVoodoo()">🧸</div>
+    <p style="position:absolute;bottom:8px;left:0;right:0;font-size:12px">Phase 1: Tap 27 candles! Phase 2: Slap Voodoo Doll! Phase 3: Tap anywhere = Fireworks +100B!</p>
+  </div>
+  <div class="log" id="log">Log: Press START QUEST! Tap 27 candles as fast as possible!</div>
+  <div id="winBox" style="display:none;background:#121833;padding:18px;border-radius:16px;margin:10px 0"></div>
+</div>
+<script>
+let phase=1, views=0, likes=0, shares=0, comments=0, subs=0, candlesBlown=0, timer=30, timerInt=null, playing=false;
+function speak(t){ try{ speechSynthesis.cancel(); let u=new SpeechSynthesisUtterance(t); u.rate=1; speechSynthesis.speak(u);}catch(e){} }
+function sound(type){ try{ let ctx=new (window.AudioContext||window.webkitAudioContext)(); let o=ctx.createOscillator(); let g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value= type==="good"?880:type==="pop"?1050:type==="boom"?150:600; o.type="sine"; g.gain.value=0.12; o.start(); o.stop(ctx.currentTime+0.3);}catch(e){} }
+function fmt(n){ if(n>=1e12) return (n/1e12).toFixed(2)+"T"; if(n>=1e9) return (n/1e9).toFixed(1)+"B"; if(n>=1e6) return (n/1e6).toFixed(1)+"M"; return n.toLocaleString(); }
+function update(){
+  document.getElementById("phaseTxt").textContent = phase===1?"1 - Cake Slicer":phase===2?"2 - Voodoo Slap":"3 - Fireworks Frenzy";
+  document.getElementById("timerTxt").textContent = timer+"s";
+  document.getElementById("viewsTxt").textContent = fmt(views);
+  document.getElementById("likesTxt").textContent = fmt(likes);
+  document.getElementById("sharesTxt").textContent = fmt(shares);
+  document.getElementById("commentsTxt").textContent = fmt(comments);
+  document.getElementById("subsTxt").textContent = fmt(subs);
+  document.getElementById("fill").style.width = Math.min(100, views/1e12*100)+"%";
+}
+function startGame(){
+  phase=1; views=0; likes=0; shares=0; comments=0; subs=0; candlesBlown=0; timer=30; playing=true;
+  document.getElementById("winBox").style.display="none";
+  buildCandles();
+  clearInterval(timerInt);
+  timerInt=setInterval(function(){ timer--; update(); if(timer<=0){ clearInterval(timerInt); if(phase===1 && candlesBlown<27){ document.getElementById("log").textContent="⏰ Timer out! Hindi mo na-blow lahat 27 candles! Retry!"; speak("Timer out! Retry!"); playing=false; } } },1000);
+  update();
+  document.getElementById("log").textContent="🎂 Phase 1 START! Tap 27 candles FAST to blow them!";
+  speak("Phase 1! Tap 27 candles fast!");
+}
+function buildCandles(){
+  let box=document.getElementById("candles"); box.innerHTML="";
+  for(let i=0;i<27;i++){
+    let d=document.createElement("div"); d.className="candle"; d.textContent="🕯️"; d.style.left=(20+(i%9)*70)+"px"; d.style.top=(90+Math.floor(i/9)*30)+"px";
+    d.onclick=function(e){ e.stopPropagation(); blowCandle(d); };
+    box.appendChild(d);
+  }
+}
+function blowCandle(d){
+  if(!playing || phase!==1) return;
+  if(d.classList.contains("off")) return;
+  d.classList.add("off"); d.textContent="💨"; candlesBlown++;
+  views+=10e9; likes+=5e9; shares+=1e9; comments+=500e6; subs+=100e6;
+  sound("pop"); update();
+  document.getElementById("log").textContent="💨 Candle blown! "+candlesBlown+"/27 - Views: "+fmt(views);
+  if(candlesBlown>=27){ clearInterval(timerInt); document.getElementById("log").textContent="🎉 All 27 candles blown! Phase 2 UNLOCKED! Slap Voodoo Doll!"; speak("All 27 candles blown! Phase 2!"); nextPhase(); }
+}
+function nextPhase(){
+  if(phase>=3) return;
+  phase++; timer=30;
+  if(phase===2){ document.getElementById("log").textContent="🧸 Phase 2 - Voodoo Doll Slap & Dodge! Slap doll, avoid falling objects!"; speak("Phase 2! Slap voodoo doll!"); startFalling(); }
+  if(phase===3){ document.getElementById("log").textContent="🎆 Phase 3 - Fireworks Frenzy! Tap anywhere = +100B! Reach 1 Trillion!"; speak("Phase 3! Fireworks frenzy!"); }
+  update();
+}
+function slapVoodoo(){
+  if(!playing) return;
+  if(phase!==2) { document.getElementById("log").textContent="Tap Voodoo Doll in Phase 2!"; return; }
+  views+=20e9; likes+=15e9; shares+=5e9; comments+=2e9; subs+=500e6;
+  spawnConfetti(20); sound("pop");
+  document.getElementById("log").textContent="🧸 SLAP! Voodoo squish! Confetti explosion! Views: "+fmt(views);
+  speak("Slap! Confetti!");
+  checkWin();
+}
+function startFalling(){
+  let count=0;
+  let fallInt=setInterval(function(){ if(phase!==2 || count>15){ clearInterval(fallInt); return; } count++;
+    let d=document.createElement("div"); d.className="fall"; d.textContent=["💣","🧱","🍰","🎁","⚡"][Math.floor(Math.random()*5)]; d.style.left=Math.random()*90+"%"; d.style.top="0px"; d.style.animationDuration=(2+Math.random()*2)+"s";
+    d.onclick=function(){ d.remove(); views+=5e9; update(); };
+    document.getElementById("stage").appendChild(d);
+    setTimeout(function(){ d.remove(); },4000);
+  },800);
+}
+function stageTap(e){
+  if(!playing) return;
+  if(phase===3){ fireworksBurst(); }
+  else if(phase===2){ document.getElementById("log").textContent="Tap Voodoo Doll, not stage!"; }
+}
+function fireworksBurst(){
+  if(!playing && phase!==3) { if(!playing) return; }
+  views+=100e9; likes+=100e9; shares+=10e9; comments+=5e9; subs+=1e9;
+  let f=document.createElement("div"); f.className="firework"; f.textContent=["🎆","🎇","💥","✨"][Math.floor(Math.random()*4)]; f.style.left=(10+Math.random()*80)+"vw"; f.style.top=(10+Math.random()*40)+"vh"; document.body.appendChild(f); setTimeout(function(){ f.remove(); },1000);
+  spawnConfetti(15); sound("boom");
+  document.getElementById("log").textContent="🎆 FIREWORKS! +100B Views +100B Likes! Total Views: "+fmt(views);
+  update(); checkWin();
+}
+function spawnConfetti(n){ for(let i=0;i<n;i++){ let d=document.createElement("div"); d.className="confetti"; d.textContent=["🎊","🎉","⭐","🎈","🍰"][Math.floor(Math.random()*5)]; d.style.left=Math.random()*100+"vw"; d.style.fontSize=(16+Math.random()*16)+"px"; d.style.animationDuration=(2+Math.random()*2)+"s"; document.body.appendChild(d); setTimeout(function(){ d.remove(); },4000); } }
+function checkWin(){
+  if(views>=1e12){
+    playing=false; clearInterval(timerInt);
+    document.getElementById("winBox").style.display="block";
+    document.getElementById("winBox").innerHTML="<h2>🎉 VIRAL CELEBRATION! 🎉</h2><p>You reached 1 TRILLION Views!<br>Views: "+fmt(views)+" | Likes: "+fmt(likes)+" | Shares: "+fmt(shares)+"<br>Happy 27th Birthday Ian Patrick Batungbacal!</p><button class='y' onclick='startGame()'>🔁 FAST RETRY</button>";
+    speak("Viral celebration! 1 Trillion views! Happy Birthday Ian!");
+    sound("good"); spawnConfetti(80);
+    for(let i=0;i<8;i++) setTimeout(fireworksBurst, i*200);
+  }
+}
+function resetGame(){ clearInterval(timerInt); startGame(); }
+update(); buildCandles();
+</script>
+</body>
+</html>
